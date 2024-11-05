@@ -72,12 +72,13 @@ class Missile:
 class Asteroid:
     def __init__(self):
         self.reset_position()
+        self.vx = 4
 
     def reset_position(self):
-        self.x = WIDTH + random.randint(0, WIDTH)
-        self.y = random.randint(0, HEIGHT)  # Spawning across the whole screen height
         self.radius = random.randint(50, 150)
-        self.vx = random.uniform(5, 10)
+        self.x = WIDTH + self.radius
+        #self.x = WIDTH + self.radius + random.randint(0, WIDTH)
+        self.y = random.randint(0, HEIGHT)
         self.image = pygame.transform.scale(asteroid_base_image, (self.radius * 2, self.radius * 2))
 
     def update(self):
