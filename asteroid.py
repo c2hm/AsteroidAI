@@ -2,6 +2,9 @@ import pygame
 import random
 import math
 
+ASTEROID_NBR = 10
+ASTEROID_SPEED = 4
+
 # Initialisation de Pygame
 pygame.init()
 
@@ -72,7 +75,7 @@ class Missile:
 class Asteroid:
     def __init__(self):
         self.reset_position()
-        self.vx = 4
+        self.vx = ASTEROID_SPEED
 
     def reset_position(self):
         self.radius = random.randint(50, 150)
@@ -141,7 +144,7 @@ def check_missile_collision(missiles, asteroids):
 def reset_game():
     global rocket, asteroids, missiles, score, running, game_over
     rocket = Rocket()
-    asteroids = [Asteroid() for _ in range(10)]
+    asteroids = [Asteroid() for _ in range(ASTEROID_NBR)]
     missiles = []
     score = 0
     game_over = False
