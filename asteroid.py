@@ -35,8 +35,6 @@ class Rocket:
         self.width = rocket_image.get_width()
         self.height = rocket_image.get_height()
 
-
-
     def update(self):
         self.y += self.vy
         if self.y < 0:
@@ -47,18 +45,14 @@ class Rocket:
     def draw(self):
         screen.blit(rocket_image, (self.x, self.y))
 
-        # Draw the collision boxes in red
-        # for box in self.get_collision_boxes():
-        #     pygame.draw.rect(screen, (255, 0, 0), box, 1)  # Red outline for each collision box
-
     def get_collision_boxes(self):
         # Divides the ship into 3 smaller rectangles for better collision detection
         box_width = self.width // 3
         boxes = [
             pygame.Rect(self.x, self.y, box_width, self.height),  # Left box
-            pygame.Rect(self.x + box_width, self.y + self.height/2 /2, box_width, self.height/2),  # Middle box
-            pygame.Rect(self.x + 2 * box_width, self.y + self.height/2.65, box_width*0.7, self.height/4),  # Right box
-            pygame.Rect(self.x + 2.7 * box_width, self.y + self.height/2.265, box_width*0.3, self.height/8)  # Right box
+            pygame.Rect(self.x + box_width, self.y + self.height / 2 / 2, box_width, self.height / 2),  # Middle box
+            pygame.Rect(self.x + 2 * box_width, self.y + self.height / 2.65, box_width * 0.7, self.height / 4),  # Right box
+            pygame.Rect(self.x + 2.7 * box_width, self.y + self.height / 2.265, box_width * 0.3, self.height / 8)  # Right box
         ]
         return boxes
 
@@ -67,6 +61,7 @@ class Missile:
         self.x = x
         self.y = y
         self.vx = 10
+        Score_missle()  
 
     def update(self):
         self.x += self.vx
@@ -78,14 +73,12 @@ class Asteroid:
     def __init__(self):
         self.reset_position()
         self.vx = ASTEROID_SPEED
-
         self.spawn_delay = random.uniform(1, 3)
         self.spawn_time = pygame.time.get_ticks()  # Record the current time
 
     def reset_position(self):
         self.radius = random.randint(50, 150)
         self.x = WIDTH + self.radius
-        #self.x = WIDTH + self.radius + random.randint(0, WIDTH)
         self.y = random.randint(0, HEIGHT)
         self.image = pygame.transform.scale(asteroid_base_image, (self.radius * 2, self.radius * 2))
 
@@ -97,7 +90,6 @@ class Asteroid:
 
     def draw(self):
         screen.blit(self.image, (int(self.x - self.radius), int(self.y - self.radius)))
-        #pygame.draw.circle(screen, (255, 0, 0), (self.x, self.y), self.radius, 1)  # 1 is the width for outline
 
     def shrink(self):
         self.radius = int(self.radius * 0.75)
@@ -137,7 +129,6 @@ def Collision_cicle_rect(circle_center, circle_radius, rect_center, rect_width, 
     # Check for collision
     return distance_squared <= circle_radius ** 2
 
-
 def check_missile_collision(missiles, asteroids):
     for missile in missiles[:]:
         for asteroid in asteroids:
@@ -148,18 +139,24 @@ def check_missile_collision(missiles, asteroids):
                 break
 
 def reset_game():
-    global rocket, asteroids, missiles, score, running, game_over
+    global rocket, asteroids, missiles, running, game_over, score
     rocket = Rocket()
     asteroids = [Asteroid() for _ in range(ASTEROID_NBR)]
     missiles = []
-    score = 0
     game_over = False
+    score = 0
 
 # Initialisation du jeu
 reset_game()
-clock = pygame.time.Clock()
+clock = pygame.time.Clock()  # Create a clock object
 font = pygame.font.Font(None, 36)
 running = True
+
+def Score_missle():
+    global score
+    score -= 5
+    if score < 0:
+        score = 0   
 
 # Boucle de jeu
 while running:
@@ -214,6 +211,8 @@ while running:
         screen.blit(game_over_text, (WIDTH // 2 - game_over_text.get_width() // 2, HEIGHT // 2))
 
     pygame.display.flip()
-    clock.tick(60)
+
+    # Control the frame rate
+    clock.tick(40)  # Maintain 60 frames per second
 
 pygame.quit()
