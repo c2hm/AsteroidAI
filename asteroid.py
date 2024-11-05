@@ -13,25 +13,49 @@ pygame.display.set_caption("Fusée dans l'espace")
 # Couleurs
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
-RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
+
+# Chargement des images
+rocket_image = pygame.image.load("ship.png")
+asteroid_base_image = pygame.image.load("asteroid.png")
+
+# Rotation et redimensionnement de la fusée
+rocket_image = pygame.transform.rotate(rocket_image, -90)  # Rotate 90 degrees to the right
+rocket_image = pygame.transform.scale(rocket_image, (rocket_image.get_width() // 2.5, rocket_image.get_height() // 2.5))
 
 # Classe pour la fusée
 class Rocket:
     def __init__(self):
-        self.x = 50  # Position initiale à gauche de l'écran
+        self.x = 50
         self.y = HEIGHT // 2
-        self.vy = 0  # Vitesse verticale uniquement
+        self.vy = 0
+        self.width = rocket_image.get_width()
+        self.height = rocket_image.get_height()
 
     def update(self):
         self.y += self.vy
         if self.y < 0:
             self.y = 0
-        elif self.y > HEIGHT:
-            self.y = HEIGHT
+        elif self.y > HEIGHT - self.height:
+            self.y = HEIGHT - self.height
 
     def draw(self):
-        pygame.draw.rect(screen, WHITE, (self.x, self.y - 10, 20, 20))
+        screen.blit(rocket_image, (self.x, self.y))
+
+        # Draw the collision boxes in red
+        # for box in self.get_collision_boxes():
+        #     pygame.draw.rect(screen, (255, 0, 0), box, 1)  # Red outline for each collision box
+
+    def get_collision_boxes(self):
+        # Divides the ship into 3 smaller rectangles for better collision detection
+        box_width = self.width // 3
+        boxes = [
+            pygame.Rect(self.x, self.y, box_width, self.height),  # Left box
+            pygame.Rect(self.x + box_width, self.y + self.height/2 /2, box_width, self.height/2),  # Middle box
+            pygame.Rect(self.x + 2 * box_width, self.y + self.height/2.65, box_width*0.7, self.height/4),  # Right box
+            pygame.Rect(self.x + 2.7 * box_width, self.y + self.height/2.265, box_width*0.3, self.height/8)  # Right box
+        ]
+        return boxes
 
 class Missile:
     def __init__(self, x, y):
@@ -51,29 +75,58 @@ class Asteroid:
 
     def reset_position(self):
         self.x = WIDTH + random.randint(0, WIDTH)
-        self.y = random.randint(0, HEIGHT)
+        self.y = random.randint(0, HEIGHT)  # Spawning across the whole screen height
         self.radius = random.randint(50, 150)
         self.vx = random.uniform(5, 10)
+        self.image = pygame.transform.scale(asteroid_base_image, (self.radius * 2, self.radius * 2))
 
     def update(self):
         self.x -= self.vx
-        if self.x < -self.radius:
+        if self.x < -self.radius * 2:
             self.reset_position()
 
     def draw(self):
-        pygame.draw.circle(screen, RED, (int(self.x), int(self.y)), self.radius)
+        screen.blit(self.image, (int(self.x - self.radius), int(self.y - self.radius)))
+        #pygame.draw.circle(screen, (255, 0, 0), (self.x, self.y), self.radius, 1)  # 1 is the width for outline
 
     def shrink(self):
-        self.radius -= 10  
-        if self.radius < 10:
+        self.radius = int(self.radius * 0.75)
+        if self.radius < 20:
             self.reset_position()
+        else:
+            self.image = pygame.transform.scale(asteroid_base_image, (self.radius * 2, self.radius * 2))
 
 def check_rocket_collision(rocket, asteroids):
+    collision_boxes = rocket.get_collision_boxes()
     for asteroid in asteroids:
-        distance = math.hypot(rocket.x - asteroid.x, rocket.y - asteroid.y)
-        if distance < asteroid.radius + 10:
-            return True
+        for box in collision_boxes:
+            if Collision_cicle_rect((asteroid.x, asteroid.y), asteroid.radius, (box.centerx, box.centery), box.width, box.height):
+                return True
     return False
+
+import math
+
+def Collision_cicle_rect(circle_center, circle_radius, rect_center, rect_width, rect_height):
+    c_x, c_y = circle_center
+    r_x, r_y = rect_center
+    r_width, r_height = rect_width, rect_height
+
+    # Calculate rectangle bounds
+    r_min_x = r_x - r_width / 2
+    r_max_x = r_x + r_width / 2
+    r_min_y = r_y - r_height / 2
+    r_max_y = r_y + r_height / 2
+
+    # Find the closest point on the rectangle to the circle's center
+    closest_x = max(r_min_x, min(c_x, r_max_x))
+    closest_y = max(r_min_y, min(c_y, r_max_y))
+
+    # Calculate distance from the circle's center to the closest point
+    distance_squared = (c_x - closest_x) ** 2 + (c_y - closest_y) ** 2
+
+    # Check for collision
+    return distance_squared <= circle_radius ** 2
+
 
 def check_missile_collision(missiles, asteroids):
     for missile in missiles[:]:
@@ -84,7 +137,6 @@ def check_missile_collision(missiles, asteroids):
                 missiles.remove(missile)
                 break
 
-# Fonction pour réinitialiser le jeu
 def reset_game():
     global rocket, asteroids, missiles, score, running, game_over
     rocket = Rocket()
@@ -108,7 +160,7 @@ while running:
             running = False
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE and not game_over:
-                missiles.append(Missile(rocket.x + 20, rocket.y))
+                missiles.append(Missile(rocket.x + rocket.width, rocket.y + rocket.height // 2))
             elif event.key == pygame.K_r and game_over:
                 reset_game()
 
