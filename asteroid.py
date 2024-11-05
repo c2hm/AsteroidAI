@@ -3,7 +3,7 @@ import random
 import math
 
 ASTEROID_NBR = 10
-ASTEROID_SPEED = 4
+ASTEROID_SPEED = 7
 
 # Initialisation de Pygame
 pygame.init()
@@ -14,7 +14,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Fusée dans l'espace")
 
 # Couleurs
-WHITE = (255, 255, 255)
+WHITE = (150, 0, 0)
 BLACK = (0, 0, 0)
 YELLOW = (255, 255, 0)
 
@@ -34,6 +34,8 @@ class Rocket:
         self.vy = 0
         self.width = rocket_image.get_width()
         self.height = rocket_image.get_height()
+
+
 
     def update(self):
         self.y += self.vy
@@ -77,6 +79,9 @@ class Asteroid:
         self.reset_position()
         self.vx = ASTEROID_SPEED
 
+        self.spawn_delay = random.uniform(1, 3)
+        self.spawn_time = pygame.time.get_ticks()  # Record the current time
+
     def reset_position(self):
         self.radius = random.randint(50, 150)
         self.x = WIDTH + self.radius
@@ -85,9 +90,10 @@ class Asteroid:
         self.image = pygame.transform.scale(asteroid_base_image, (self.radius * 2, self.radius * 2))
 
     def update(self):
-        self.x -= self.vx
-        if self.x < -self.radius * 2:
-            self.reset_position()
+        if pygame.time.get_ticks() - self.spawn_time > self.spawn_delay * 1000:
+            self.x -= self.vx
+            if self.x < -self.radius * 2:
+                self.reset_position()
 
     def draw(self):
         screen.blit(self.image, (int(self.x - self.radius), int(self.y - self.radius)))
